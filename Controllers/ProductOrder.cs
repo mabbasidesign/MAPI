@@ -9,80 +9,72 @@ namespace MAPI.Controllers
 {
     [Route("Product/[controller]")]
     [ApiController]
-    public class ProductOrder: ControllerBase
+    public class ProductOrderController : ControllerBase
     {
-        private readonly AppDbContext _db;
-        public ProductOrder(AppDbContext db)
+        private readonly IProductService _productService;
+
+        public ProductOrderController(IProductService productService)
         {
-            _db = db;
+            _productService = productService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Products>>> GettAll()
+        public async Task<ActionResult<List<Products>>> GetAllProducts()
         {
-            var products = await _db.Products.ToListAsync();
-
-            //if(products == null)
-            //{
-            //    return NotFound("No product found");
-            //}
-
+            var products = await _productService.GetAll();
             return Ok(products);
         }
 
         [HttpGet("{id}", Name = "GetProductById")]
-        public async Task<ActionResult<Products>> GetById(int id)
+        public async Task<ActionResult<Products>> GetProductById(int id)
         {
-            if(id <= 0)
+            if (id <= 0)
             {
-                return BadRequest("id is null");
+                return BadRequest("Invalid product id.");
             }
 
-            var product = await _db.Products.Where(p => p.Id == id).FirstOrDefaultAsync();
+            var product = await _productService.Get(id);
 
-            if(product == null)
+            if (product == null)
             {
-                return NotFound("No product found");
+                return NotFound("Product not found.");
             }
 
             return Ok(product);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromForm] Products product)
+        public async Task<IActionResult> AddProduct([FromForm] Products product)
         {
             if (product == null)
             {
-                return BadRequest("product is null");
+                return BadRequest("Product is null.");
             }
 
-            _db.Products.Add(product);
-            await _db.SaveChangesAsync();
+            await _productService.Create(product);
 
             return CreatedAtRoute("GetProductById", new { id = product.Id }, product);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteProduct(int id)
         {
-            if(id <= 0)
+            if (id <= 0)
             {
-                return BadRequest("Invalid id!");
+                return BadRequest("Invalid product id.");
             }
 
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
+            var product = await _productService.Get(id);
 
-            if(product == null)
+            if (product == null)
             {
-                return NotFound("product is null");
+                return NotFound("Product not found.");
             }
 
-            _db.Products.Remove(product);
-            await _db.SaveChangesAsync();
+            await _productService.Delete(id);
 
-            return NotFound();
+            return NoContent();
         }
-
     }
 }
 
