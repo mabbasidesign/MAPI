@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MAPI.Controllers
 {
-    [Route("Product/[controller]")]
+    [Route("procuts/[controller]")]
     [ApiController]
     public class ProductOrderController : ControllerBase
     {
@@ -51,7 +51,7 @@ namespace MAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddProduct([FromForm] ProductsDto productsDto)
+        public async Task<IActionResult> AddProduct([FromBody] ProductsDto productsDto)
         {
             if (productsDto == null)
             {
@@ -83,6 +83,27 @@ namespace MAPI.Controllers
 
             return NoContent();
         }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ProductsDto>> Update(int id, [FromBody] ProductsDto productDto)
+        {
+            if(productDto == null || id <= 0)
+            {
+                return BadRequest("Invalid data");
+            }
+
+            var existingProduct = await _productService.Get(id);
+            if(existingProduct == null)
+            {
+                return NotFound($"Product with ID {id} not found.");
+            }
+
+            productDto.Id = id;
+            var updatedProduct = _mapper.Map<Products>(productDto);
+            await _productService.Update(updatedProduct);
+            return NoContent();
+        }
+
     }
 }
 

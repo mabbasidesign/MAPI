@@ -8,5 +8,6 @@ namespace MAPI.IServices
         Task<Products> Get(int id);
         Task Create(Products product);
         Task Delete(int id);
+        Task Update(Products product);
     }
 }

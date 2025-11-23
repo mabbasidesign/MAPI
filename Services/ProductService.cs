@@ -38,5 +38,16 @@ namespace MAPI.Services
         {
             return await _db.Products.AsNoTracking().ToListAsync();
         }
+
+        public async Task Update(Products product)
+        {
+            var existingProduct = await _db.Products.FirstOrDefaultAsync(p => p.Id == product.Id);
+            if(existingProduct == null)
+            {
+                throw new KeyNotFoundException($"Product with Id {product.Id} not found.");
+            }
+            _db.Update(product);
+            await _db.SaveChangesAsync();
+        }
     }
 }
