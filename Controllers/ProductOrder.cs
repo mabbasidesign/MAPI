@@ -1,4 +1,6 @@
-﻿using MAPI.Data;
+﻿using AutoMapper;
+using MAPI.Data;
+using MAPI.Dto;
 using MAPI.IServices;
 using MAPI.Model;
 using Microsoft.AspNetCore.Http;
@@ -12,21 +14,24 @@ namespace MAPI.Controllers
     public class ProductOrderController : ControllerBase
     {
         private readonly IProductService _productService;
+        private readonly IMapper _mapper;
 
-        public ProductOrderController(IProductService productService)
+        public ProductOrderController(IProductService productService, IMapper mapper)
         {
             _productService = productService;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Products>>> GetAllProducts()
+        public async Task<ActionResult<List<ProductsDto>>> GetAllProducts()
         {
             var products = await _productService.GetAll();
-            return Ok(products);
+            var productsDto = _mapper.Map<ProductsDto>(products);
+            return Ok(productsDto);
         }
 
         [HttpGet("{id}", Name = "GetProductById")]
-        public async Task<ActionResult<Products>> GetProductById(int id)
+        public async Task<ActionResult<ProductsDto>> GetProductById(int id)
         {
             if (id <= 0)
             {
@@ -40,17 +45,20 @@ namespace MAPI.Controllers
                 return NotFound("Product not found.");
             }
 
+            var productDto = _mapper.Map<ProductsDto>(product);
+
             return Ok(product);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddProduct([FromForm] Products product)
+        public async Task<IActionResult> AddProduct([FromForm] ProductsDto productsDto)
         {
-            if (product == null)
+            if (productsDto == null)
             {
                 return BadRequest("Product is null.");
             }
 
+            var product = _mapper.Map<Products>(productsDto);
             await _productService.Create(product);
 
             return CreatedAtRoute("GetProductById", new { id = product.Id }, product);
