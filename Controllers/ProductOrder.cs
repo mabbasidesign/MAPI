@@ -22,15 +22,15 @@ namespace MAPI.Controllers
         {
             var products = await _db.Products.ToListAsync();
 
-            if(products == null)
-            {
-                return NotFound("No product found");
-            }
+            //if(products == null)
+            //{
+            //    return NotFound("No product found");
+            //}
 
             return Ok(products);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetProductById")]
         public async Task<ActionResult<Products>> GetById(int id)
         {
             if(id <= 0)
@@ -59,7 +59,7 @@ namespace MAPI.Controllers
             _db.Products.Add(product);
             await _db.SaveChangesAsync();
 
-            return CreatedAtRoute(nameof(GetById), new { id = product.Id }, product);
+            return CreatedAtRoute("GetProductById", new { id = product.Id }, product);
         }
 
         [HttpDelete("{id}")]
@@ -76,6 +76,9 @@ namespace MAPI.Controllers
             {
                 return NotFound("product is null");
             }
+
+            _db.Products.Remove(product);
+            await _db.SaveChangesAsync();
 
             return NotFound();
         }
