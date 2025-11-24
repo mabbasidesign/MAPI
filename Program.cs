@@ -7,10 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// Add AutoMapper
-builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddDbContext<AppDbContext>();
 builder.Services.AddScoped<IProductService, ProductService>();
+//builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 

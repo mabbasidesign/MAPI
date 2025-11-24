@@ -27,7 +27,7 @@ namespace MAPI.Controllers
         public async Task<ActionResult<List<ProductsDto>>> GetAllProducts()
         {
             var products = await _productService.GetAll();
-            var productsDto = _mapper.Map<ProductsDto>(products);
+            var productsDto = _mapper.Map<List<ProductsDto>>(products);
             return Ok(productsDto);
         }
 
@@ -48,7 +48,7 @@ namespace MAPI.Controllers
 
             var productDto = _mapper.Map<ProductsDto>(product);
 
-            return Ok(product);
+            return Ok(productDto);
         }
 
         [HttpPost]
@@ -86,7 +86,7 @@ namespace MAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ProductsDto>> Update(int id, [FromBody] ProductsDto productDto)
+        public async Task<ActionResult> Update(int id, [FromBody] ProductsDto productDto)
         {
             if(productDto == null || id <= 0)
             {
@@ -100,8 +100,8 @@ namespace MAPI.Controllers
             }
 
             var updatedProduct = _mapper.Map<Products>(productDto);
-            await _productService.Update(updatedProduct);
-            return Ok(updatedProduct);
+            //await _productService.Update(updatedProduct);
+            return NoContent();
         }
 
     }
