@@ -5,6 +5,7 @@ using MAPI.IServices;
 using MAPI.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -102,6 +103,44 @@ namespace MAPI.Controllers
             var updatedProduct = _mapper.Map<Products>(productDto);
             //await _productService.Update(updatedProduct);
             return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<ProductsDto>> PatchProduct(int id, [FromBody] JsonPatchDocument<ProductsDto> patchDoc)
+        {
+            if (patchDoc == null || id <= 0)
+            {
+                return BadRequest("Invalid patch document or id.");
+            }
+
+            var product = await _productService.Get(id);
+            if (product == null)
+            {
+                return NotFound($"Product with ID {id} not found.");
+            }
+
+            var productDto = new ProductsDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                Status = product.Status
+            };
+
+            patchDoc.ApplyTo(productDto, (Microsoft.AspNetCore.JsonPatch.Adapters.IObjectAdapter)ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            product.Name = productDto.Name;
+            product.Price = productDto.Price;
+            product.Status = productDto.Status;
+
+            await _productService.Update(product);
+
+            return Ok(productDto);
         }
 
     }
