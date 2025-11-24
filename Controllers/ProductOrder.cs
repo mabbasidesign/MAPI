@@ -4,6 +4,7 @@ using MAPI.Dto;
 using MAPI.IServices;
 using MAPI.Model;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -98,31 +99,23 @@ namespace MAPI.Controllers
                 return NotFound($"Product with ID {id} not found.");
             }
 
-            productDto.Id = id;
             var updatedProduct = _mapper.Map<Products>(productDto);
             await _productService.Update(updatedProduct);
-            return NoContent();
+            return Ok(updatedProduct);
         }
 
     }
 }
 
 
-// data anotations
-// update
-// update
-// patch update
-// soft delete
-// dto
-// automapper
-// query string search string from route
-// upload image from file
-// pagination
-// filter
-// advance routing
-// versioning
-// middleware error
-// middleware filter validation
-// api documantation
-// jwt
-// 
+// Patch update (JSON Patch)
+// Soft Delete
+// Query string search
+// Filtering + Sorting
+// Pagination
+// Image upload
+// Advanced Routing
+// Global Error Handling Middleware
+// Validation Filter
+// Swagger documentation
+// JWT Authentication
