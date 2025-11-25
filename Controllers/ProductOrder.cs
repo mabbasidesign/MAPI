@@ -251,4 +251,10 @@ namespace MAPI.Controllers
 // Global Error Handling Middleware
 // Validation Filter
 // Swagger documentation
+// Rate limiting
 // JWT Authentication
+// Unit tests
+// Entity Framework advanced queries
+// Background jobs
+// Caching (Redis)
+// CI/CD basics

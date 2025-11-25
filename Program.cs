@@ -1,5 +1,6 @@
 using MAPI.Data;
 using MAPI.IServices;
+using MAPI.Middleware;
 using MAPI.Model;
 using MAPI.Services;
 
@@ -46,6 +47,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseCors("AllowReactApp");  // Add this line
 app.UseAuthorization();
 app.MapControllers();
