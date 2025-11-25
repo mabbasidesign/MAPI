@@ -33,6 +33,26 @@ namespace MAPI.Controllers
             return Ok(productsDto);
         }
 
+        [HttpGet("paged")]
+        public async Task<ActionResult<List<ProductsDto>>> GetPagedProducts(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            if (page <= 0) page = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            var products = await _productService.GetAll();
+            var activeProducts = products.Where(p => !p.IsDeleted);
+
+            var pagedProducts = activeProducts
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var productsDto = _mapper.Map<List<ProductsDto>>(pagedProducts);
+            return Ok(productsDto);
+        }
+
         [HttpGet("search")]
         public async Task<ActionResult<List<ProductsDto>>> SearchProducts([FromQuery] string search)
         {
@@ -54,11 +74,11 @@ namespace MAPI.Controllers
 
         [HttpGet("filter")]
         public async Task<ActionResult<List<ProductsDto>>> FilterAndSortProducts(
-    [FromQuery] string? status,
-    [FromQuery] decimal? minPrice,
-    [FromQuery] decimal? maxPrice,
-    [FromQuery] string? sortBy,
-    [FromQuery] bool desc = false)
+            [FromQuery] string? status,
+            [FromQuery] decimal? minPrice,
+            [FromQuery] decimal? maxPrice,
+            [FromQuery] string? sortBy,
+            [FromQuery] bool desc = false)
         {
             var products = await _productService.GetAll();
             var activeProducts = products.Where(p => !p.IsDeleted);
