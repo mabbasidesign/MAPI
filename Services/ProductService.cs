@@ -24,19 +24,24 @@ namespace MAPI.Services
             var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product != null)
             {
-                _db.Products.Remove(product);
+                product.IsDeleted = true;
                 await _db.SaveChangesAsync();
             }
         }
 
         public async Task<Products?> Get(int id)
         {
-            return await _db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+            return await _db.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<List<Products>> GetAll()
         {
-            return await _db.Products.AsNoTracking().ToListAsync();
+            return await _db.Products
+                .Where(p => !p.IsDeleted)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         public async Task Update(Products product)

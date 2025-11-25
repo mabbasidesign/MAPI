@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MAPI.Controllers
 {
-    [Route("procuts/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class ProductOrderController : ControllerBase
     {
@@ -28,7 +28,8 @@ namespace MAPI.Controllers
         public async Task<ActionResult<List<ProductsDto>>> GetAllProducts()
         {
             var products = await _productService.GetAll();
-            var productsDto = _mapper.Map<List<ProductsDto>>(products);
+            var activeProducts = products.Where(p => !p.IsDeleted).ToList();
+            var productsDto = _mapper.Map<List<ProductsDto>>(activeProducts);
             return Ok(productsDto);
         }
 
@@ -69,7 +70,7 @@ namespace MAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            if (id <= 0)
+            if (id <=0)
             {
                 return BadRequest("Invalid product id.");
             }
@@ -81,7 +82,8 @@ namespace MAPI.Controllers
                 return NotFound("Product not found.");
             }
 
-            await _productService.Delete(id);
+            product.IsDeleted = true;
+            await _productService.Update(product);
 
             return NoContent();
         }

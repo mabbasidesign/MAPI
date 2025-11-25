@@ -17,5 +17,6 @@ namespace MAPI.Model
         [StringLength(50, ErrorMessage = "Status cannot exceed 50 characters.")]
 
         public string Status { get; set; } = string.Empty;
+        public bool IsDeleted { get; set; }
     }
 }
