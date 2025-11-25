@@ -33,6 +33,25 @@ namespace MAPI.Controllers
             return Ok(productsDto);
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult<List<ProductsDto>>> SearchProducts([FromQuery] string search)
+        {
+            var products = await _productService.GetAll();
+            var activeProducts = products.Where(p => !p.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                activeProducts = activeProducts.Where(p =>
+                    (!string.IsNullOrEmpty(p.Name) && p.Name.ToLower().Contains(lowerSearch)) ||
+                    (!string.IsNullOrEmpty(p.Status) && p.Status.ToLower().Contains(lowerSearch))
+                );
+            }
+
+            var productsDto = _mapper.Map<List<ProductsDto>>(activeProducts.ToList());
+            return Ok(productsDto);
+        }
+
         [HttpGet("{id}", Name = "GetProductById")]
         public async Task<ActionResult<ProductsDto>> GetProductById(int id)
         {
