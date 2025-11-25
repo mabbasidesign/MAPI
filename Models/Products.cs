@@ -18,5 +18,6 @@ namespace MAPI.Model
 
         public string Status { get; set; } = string.Empty;
         public bool IsDeleted { get; set; }
+        public string? ImagePath { get; set; }
     }
 }

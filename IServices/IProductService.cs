@@ -9,5 +9,6 @@ namespace MAPI.IServices
         Task Create(Products product);
         Task Delete(int id);
         Task Update(Products product);
+        Task<string> UploadImage(int productId, IFormFile image);
     }
-}
+}   

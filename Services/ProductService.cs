@@ -54,5 +54,32 @@ namespace MAPI.Services
             _db.Update(product);
             await _db.SaveChangesAsync();
         }
+
+        public async Task<string> UploadImage(int productId, IFormFile image)
+        {
+            if (image == null || image.Length == 0)
+                throw new ArgumentException("No image uploaded.");
+
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            if (product == null)
+                throw new KeyNotFoundException($"Product with Id {productId} not found.");
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+            Directory.CreateDirectory(uploadsFolder);
+            var fileName = $"{Guid.NewGuid()}_{image.FileName}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await image.CopyToAsync(stream);
+            }
+
+            // Save image path to product
+            product.ImagePath = $"/images/{fileName}";
+            await _db.SaveChangesAsync();
+
+            return product.ImagePath;
+        }
+
     }
 }

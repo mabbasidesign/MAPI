@@ -216,6 +216,27 @@ namespace MAPI.Controllers
             return Ok(productDto);
         }
 
+        [HttpPost("upload-image/{id}")]
+        public async Task<IActionResult> UploadImage(int id, IFormFile image)
+        {
+            if (image == null || image.Length == 0)
+                return BadRequest("No image uploaded.");
+
+            try
+            {
+                var imagePath = await _productService.UploadImage(id, image);
+                return Ok(new { imagePath });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Product not found.");
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
     }
 }
 
