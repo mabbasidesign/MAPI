@@ -52,6 +52,38 @@ namespace MAPI.Controllers
             return Ok(productsDto);
         }
 
+        [HttpGet("filter")]
+        public async Task<ActionResult<List<ProductsDto>>> FilterAndSortProducts(
+    [FromQuery] string? status,
+    [FromQuery] decimal? minPrice,
+    [FromQuery] decimal? maxPrice,
+    [FromQuery] string? sortBy,
+    [FromQuery] bool desc = false)
+        {
+            var products = await _productService.GetAll();
+            var activeProducts = products.Where(p => !p.IsDeleted);
+
+            // Filtering
+            if (!string.IsNullOrWhiteSpace(status))
+                activeProducts = activeProducts.Where(p => p.Status != null && p.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
+            if (minPrice.HasValue)
+                activeProducts = activeProducts.Where(p => p.Price >= minPrice.Value);
+            if (maxPrice.HasValue)
+                activeProducts = activeProducts.Where(p => p.Price <= maxPrice.Value);
+
+            // Sorting
+            activeProducts = sortBy switch
+            {
+                "name" => desc ? activeProducts.OrderByDescending(p => p.Name) : activeProducts.OrderBy(p => p.Name),
+                "price" => desc ? activeProducts.OrderByDescending(p => p.Price) : activeProducts.OrderBy(p => p.Price),
+                "status" => desc ? activeProducts.OrderByDescending(p => p.Status) : activeProducts.OrderBy(p => p.Status),
+                _ => activeProducts
+            };
+
+            var productsDto = _mapper.Map<List<ProductsDto>>(activeProducts.ToList());
+            return Ok(productsDto);
+        }
+
         [HttpGet("{id}", Name = "GetProductById")]
         public async Task<ActionResult<ProductsDto>> GetProductById(int id)
         {
