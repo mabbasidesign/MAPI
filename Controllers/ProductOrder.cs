@@ -37,7 +37,6 @@ namespace MAPI.Controllers
         //    var productsDto = _mapper.Map<List<ProductsDto>>(activeProducts);
         //    return Ok(productsDto);
         //}
-
         public async Task<ActionResult<List<ProductsDto>>> GetAllProducts()
         {
             const string cacheKey = "all_products";
@@ -58,6 +57,7 @@ namespace MAPI.Controllers
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
                 };
+
                 await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(productsDto), options);
             }
 
