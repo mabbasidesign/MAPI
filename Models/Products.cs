@@ -1,5 +1,6 @@
 ﻿using MAPI.Helper;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MAPI.Model
 {
@@ -12,6 +13,7 @@ namespace MAPI.Model
         public string Name { get; set; } = null!;
         [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
 
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
         [Required(ErrorMessage = "Status is required.")]
         [StringLength(50, ErrorMessage = "Status cannot exceed 50 characters.")]
