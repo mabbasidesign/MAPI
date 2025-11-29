@@ -30,39 +30,39 @@ namespace MAPI.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(List<ProductsDto>), StatusCodes.Status200OK)]
-        //public async Task<ActionResult<List<ProductsDto>>> GetAllProducts()
-        //{
-        //    var products = await _productService.GetAll();
-        //    var activeProducts = products.Where(p => !p.IsDeleted).ToList();
-        //    var productsDto = _mapper.Map<List<ProductsDto>>(activeProducts);
-        //    return Ok(productsDto);
-        //}
         public async Task<ActionResult<List<ProductsDto>>> GetAllProducts()
         {
-            const string cacheKey = "all_products";
-            var cachedProducts = await _cache.GetStringAsync(cacheKey);
-
-            List<ProductsDto> productsDto;
-            if (!string.IsNullOrEmpty(cachedProducts))
-            {
-                productsDto = JsonSerializer.Deserialize<List<ProductsDto>>(cachedProducts)!;
-            }
-            else
-            {
-                var products = await _productService.GetAll();
-                var activeProducts = products.Where(p => !p.IsDeleted).ToList();
-                productsDto = _mapper.Map<List<ProductsDto>>(activeProducts);
-
-                var options = new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-                };
-
-                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(productsDto), options);
-            }
-
+            var products = await _productService.GetAll();
+            var activeProducts = products.Where(p => !p.IsDeleted).ToList();
+            var productsDto = _mapper.Map<List<ProductsDto>>(activeProducts);
             return Ok(productsDto);
         }
+
+        //public async Task<ActionResult<List<ProductsDto>>> GetAllProducts()
+        //{
+        //    const string cacheKey = "all_products";
+        //    var cachedProducts = await _cache.GetStringAsync(cacheKey);
+
+        //    List<ProductsDto> productsDto;
+        //    if (!string.IsNullOrEmpty(cachedProducts))
+        //    {
+        //        productsDto = JsonSerializer.Deserialize<List<ProductsDto>>(cachedProducts)!;
+        //    }
+        //    else
+        //    {
+        //        var products = await _productService.GetAll();
+        //        var activeProducts = products.Where(p => !p.IsDeleted).ToList();
+        //        productsDto = _mapper.Map<List<ProductsDto>>(activeProducts);
+
+        //        var options = new DistributedCacheEntryOptions
+        //        {
+        //            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+        //        };
+        //        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(productsDto), options);
+        //    }
+
+        //    return Ok(productsDto);
+        //}
 
         [HttpGet("paged")]
         public async Task<ActionResult<List<ProductsDto>>> GetPagedProducts(

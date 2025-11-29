@@ -98,25 +98,61 @@ namespace Marvelous.Repository
                 var result = await _userManager.CreateAsync(user, registerationRequestDTO.Password);
                 if (result.Succeeded)
                 {
-                    if (!_roleManager.RoleExistsAsync("admin").GetAwaiter().GetResult())
+                    // Ensure the requested role exists
+                    if (!await _roleManager.RoleExistsAsync(registerationRequestDTO.Role))
                     {
-                        await _roleManager.CreateAsync(new IdentityRole("admin"));
-                        await _roleManager.CreateAsync(new IdentityRole("customer"));
+                        await _roleManager.CreateAsync(new IdentityRole(registerationRequestDTO.Role));
                     }
-                    await _userManager.AddToRoleAsync(user, "admin");
+                    await _userManager.AddToRoleAsync(user, registerationRequestDTO.Role);
+
                     var userToReturn = _db.ApplicationUsers
                         .FirstOrDefault(u => u.UserName == registerationRequestDTO.UserName);
                     return _mapper.Map<UserDTO>(userToReturn);
-
                 }
             }
             catch (Exception e)
             {
-
+                // Optionally log the exception
+                // _logger.LogError(e, "Error during registration");
             }
 
-            return new UserDTO();
+            return null; // Return null on failure
         }
-       
+
+        //public async Task<UserDTO> Register(RegisterationRequestDTO registerationRequestDTO)
+        //{
+        //    ApplicationUser user = new()
+        //    {
+        //        UserName = registerationRequestDTO.UserName,
+        //        Email = registerationRequestDTO.UserName,
+        //        NormalizedEmail = registerationRequestDTO.UserName.ToUpper(),
+        //        Name = registerationRequestDTO.Name
+        //    };
+
+        //    try
+        //    {
+        //        var result = await _userManager.CreateAsync(user, registerationRequestDTO.Password);
+        //        if (result.Succeeded)
+        //        {
+        //            if (!_roleManager.RoleExistsAsync("admin").GetAwaiter().GetResult())
+        //            {
+        //                await _roleManager.CreateAsync(new IdentityRole("admin"));
+        //                await _roleManager.CreateAsync(new IdentityRole("customer"));
+        //            }
+        //            await _userManager.AddToRoleAsync(user, "admin");
+        //            var userToReturn = _db.ApplicationUsers
+        //                .FirstOrDefault(u => u.UserName == registerationRequestDTO.UserName);
+        //            return _mapper.Map<UserDTO>(userToReturn);
+
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+
+        //    }
+
+        //    return new UserDTO();
+        //}
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Mapi.Dto;
 using MAPI.Dto;
 using MAPI.Model;
 
@@ -10,6 +11,7 @@ namespace MAPI
         {
             CreateMap<Products, ProductsDto>();
             CreateMap<ProductsDto, Products>();
+            CreateMap<ApplicationUser, UserDTO>();
         }
     }
 }

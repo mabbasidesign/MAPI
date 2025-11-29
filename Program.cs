@@ -3,10 +3,12 @@ using MAPI.IServices;
 using MAPI.Middleware;
 using MAPI.Model;
 using MAPI.Services;
+using Marvelous.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +20,12 @@ builder.Services.AddDbContext<AppDbContext>(option =>
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "MAPI_";
+});
 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "YourSuperSecretKey";
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "YourIssuer";
@@ -43,9 +51,34 @@ builder.Services.AddAuthentication(x =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "MAPI API", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new()
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter 'Bearer' [space] and then your valid token."
+    });
+
+    c.AddSecurityRequirement(new()
+    {
+        {
+            new() { Reference = new() { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
+            Array.Empty<string>()
+        }
+    });
+});
+
 builder.Services.AddDbContext<AppDbContext>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 //builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -67,25 +100,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-//    if (!context.Products.Any())
-//    {
-//        context.Products.AddRange(
-//            new Products { Id = 1, Name = "Apple", Price = 1.20m, Status = "Available" },
-//            new Products { Id = 2, Name = "Banana", Price = 0.80m, Status = "Available" },
-//            new Products { Id = 3, Name = "Orange", Price = 1.50m, Status = "Available" }
-//        );
-//        context.SaveChanges();
-//    }
-//}
-
 app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseCors("AllowReactApp");
-app.UseAuthorization();
+app.UseAuthentication(); 
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
+
