@@ -21,11 +21,13 @@ builder.Services.AddDbContext<AppDbContext>(option =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "MAPI_";
-});
+//builder.Services.AddStackExchangeRedisCache(options =>
+//{
+//    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+//    options.InstanceName = "MAPI_";
+//});
+
+builder.Services.AddDistributedMemoryCache();
 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "YourSuperSecretKey";
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "YourIssuer";
