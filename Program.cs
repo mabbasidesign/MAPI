@@ -1,4 +1,4 @@
-using MAPI.Data;
+﻿using MAPI.Data;
 using MAPI.IServices;
 using MAPI.Middleware;
 using MAPI.Model;
@@ -13,53 +13,81 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(option =>
+// -----------------------
+// Database
+// -----------------------
+builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"));
 });
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>();
 
-//builder.Services.AddStackExchangeRedisCache(options =>
-//{
-//    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-//    options.InstanceName = "MAPI_";
-//});
-
+// -----------------------
+// Redis Cache
+// -----------------------
 builder.Services.AddDistributedMemoryCache();
 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "YourSuperSecretKey";
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "YourIssuer";
 
-var key = builder.Configuration.GetValue<string>("ApiSettings:Secret");
-builder.Services.AddAuthentication(x =>
+// -----------------------
+// Identity
+// -----------------------
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+// -----------------------
+// Repositories / Services
+// -----------------------
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// -----------------------
+// JWT Authentication
+// -----------------------
+var key = Encoding.UTF8.GetBytes(builder.Configuration["ApiSettings:Secret"]);
+
+builder.Services.AddAuthentication(options =>
 {
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-    .AddJwtBearer(x =>
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        x.RequireHttpsMetadata = false;
-        x.SaveToken = true;
-        x.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-            ValidateIssuer = false,
-            ValidateAudience = false,
-        };
-    });
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ClockSkew = TimeSpan.Zero // جلوگیری از خطای زمان
+    };
+});
 
+// -----------------------
+// CORS
+// -----------------------
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
+// -----------------------
+// Controllers & Swagger
+// -----------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
-
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "MAPI API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "MAPI API", Version = "v1" });
 
-    c.AddSecurityDefinition("Bearer", new()
+    // JWT Authorization در Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
@@ -69,33 +97,23 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Enter 'Bearer' [space] and then your valid token."
     });
 
-    c.AddSecurityRequirement(new()
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new() { Reference = new() { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
-            Array.Empty<string>()
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            new string[] {}
         }
     });
 });
 
-builder.Services.AddDbContext<AppDbContext>();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-//builder.Services.AddAutoMapper(typeof(Program));
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
-// Add CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowReactApp",
-        policy => policy.WithOrigins("http://localhost:3000")
-                       .AllowAnyHeader()
-                       .AllowAnyMethod());
-});
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// -----------------------
+// Middleware Pipeline
+// -----------------------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -105,9 +123,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseCors("AllowReactApp");
-app.UseAuthentication(); 
+
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
-
-

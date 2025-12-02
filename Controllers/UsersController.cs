@@ -10,6 +10,7 @@ namespace MAPI.Controllers
     //[Route("api/[UsersAuth]")]
     [Route("api/users")]
     [ApiController]
+    
     public class UsersController : Controller
     {
         private readonly IUserRepository _userRepo;

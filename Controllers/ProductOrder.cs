@@ -3,6 +3,7 @@ using MAPI.Data;
 using MAPI.Dto;
 using MAPI.IServices;
 using MAPI.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.JsonPatch;
@@ -29,7 +30,13 @@ namespace MAPI.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(List<ProductsDto>), StatusCodes.Status200OK)]
+        //[ProducesResponseType(typeof(List<ProductsDto>), StatusCodes.Status200OK)]
+        [ResponseCache(CacheProfileName = "Default30")]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [Authorize(Roles = "admin")]
+        //[Authorize]
         //public async Task<ActionResult<List<ProductsDto>>> GetAllProducts()
         //{
         //    var products = await _productService.GetAll();

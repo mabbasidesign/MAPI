@@ -41,7 +41,7 @@ namespace Marvelous.Repository
             return false;
         }
 
-        public async Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO)
+        public async Task<LoginResponseDTO> LoginTest(LoginRequestDTO loginRequestDTO)
         {
             var user = _db.ApplicationUsers
                 .FirstOrDefault(u => u.UserName.ToLower() == loginRequestDTO.UserName.ToLower());
@@ -60,7 +60,8 @@ namespace Marvelous.Repository
             //if user was found generate JWT Token
             var roles = await _userManager.GetRolesAsync(user);
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(secretKey);
+            //var key = Encoding.ASCII.GetBytes(secretKey);
+            var key = Encoding.UTF8.GetBytes(secretKey);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -82,6 +83,54 @@ namespace Marvelous.Repository
             };
             return loginResponseDTO;
         }
+
+        public async Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO)
+        {
+            var user = await _userManager.FindByNameAsync(loginRequestDTO.UserName);
+            if (user == null) return new LoginResponseDTO { Token = "", User = null };
+
+            bool isValid = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
+            if (!isValid) return new LoginResponseDTO { Token = "", User = null };
+
+            // گرفتن نقش‌ها
+            var roles = await _userManager.GetRolesAsync(user);
+
+            // تعریف Claims
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            // کلید JWT
+            var key = Encoding.UTF8.GetBytes(secretKey);
+
+            // ایجاد توکن
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                NotBefore = DateTime.UtcNow,
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return new LoginResponseDTO
+            {
+                Token = tokenString,
+                User = _mapper.Map<UserDTO>(user)
+            };
+        }
+
 
         public async Task<UserDTO> Register(RegisterationRequestDTO registerationRequestDTO)
         {
