@@ -211,7 +211,7 @@ namespace MAPI.Controllers
             }
 
             var updatedProduct = _mapper.Map<Products>(productDto);
-            //await _productService.Update(updatedProduct);
+            await _productService.Update(updatedProduct);
             return NoContent();
         }
 
