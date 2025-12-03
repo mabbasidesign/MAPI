@@ -295,3 +295,10 @@ namespace MAPI.Controllers
 // Background jobs
 // Caching (Redis)
 // CI/CD basics
+
+// Rate Limiting
+// API Versioning
+// CQRS + MediatR
+// Microservice separation (Product - Order - Image
+// Clean Architecture
+// Pub/Sub با RabbitMQ
